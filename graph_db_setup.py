@@ -59,8 +59,8 @@ def memgraph_operations():
                     if parent is not None:
                         new_parent_rel = client.execute_query(
                             "MATCH (n1:Node),(n2:Node) WHERE n1.id=$id1 AND n1.table=$table AND n2.id=$id2 AND n2.table=$table CREATE (n1)-[r:PARENT_OF]->(n2)",
-                            id1=new_node_id,
-                            id2=parent,
+                            id1=parent,
+                            id2=new_node_id,
                             table=table_name
                         )
 
