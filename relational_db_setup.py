@@ -6,7 +6,7 @@ import string
 import mariadb
 import psycopg2
 import aerospike
-from aerospike import exception as ae_ex
+from aerospike import exception as ae_ex # type: ignore
 
 user = 'dbbench'
 passwd = 'Bd8EtstJXINw3yfzzA97'
