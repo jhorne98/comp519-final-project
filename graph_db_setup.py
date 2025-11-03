@@ -4,6 +4,7 @@ import random
 import string
 
 from neo4j import GraphDatabase
+import pydgraph
 
 user = 'dbbench'
 passwd = 'Bd8EtstJXINw3yfzzA97'
@@ -27,8 +28,18 @@ memgraph_config = {
     'auth': ("", "")
 }
 
-def memgraph_operations():
-    with GraphDatabase.driver(memgraph_config['uri'], auth=memgraph_config['auth']) as client:
+neo4j_config = {
+    'uri': "neo4j://localhost",
+    'auth': ("neo4j", "Bd8EtstJXINw3yfzzA97")
+}
+
+dgraph_config = {
+    'uri': "localhost:9080"
+}
+
+# Memgraph also uses Neo4j's GraphDatabase driver, so operations for both can be generalized
+def cypher_operations(config, db):
+    with GraphDatabase.driver(config['uri'], auth=config['auth']) as client:
         client.verify_connectivity()
 
         for length in DBLength:
@@ -50,7 +61,7 @@ def memgraph_operations():
                         id=idx,
                         payload=payload,
                         table=table_name,
-                        database_="memgraph",
+                        database_=db,
                     )
 
                     new_node_id = new_node.records[0].data()['n.id']
@@ -64,5 +75,47 @@ def memgraph_operations():
                             table=table_name
                         )
 
+def dgraph_operations():
+    client_stub = pydgraph.DgraphClientStub(dgraph_config['uri'])
+    client = pydgraph.DgraphClient(client_stub)
+
+    for length in DBLength:
+        for type in DBType:
+            table_name = length.name.lower() + type.name.lower()
+            created_nodes = [None]
+            payload_type = 'int' if type is DBType.INTEGER else 'string'
+            schema = table_name + '.id: int @index(int) .\n' \
+                + table_name + '.payload: ' + payload_type + ' .\n' \
+                + 'type ' + table_name + ' {\n' \
+                + ' ' + table_name + '.id\n' \
+                + ' ' + table_name + '.payload\n' \
+                + '}\n'
+            op = pydgraph.Operation(schema=schema)
+            #op = pydgraph.Operation(drop_all=True)
+            client.alter(op)
+            for idx in range(0, length.value):
+                parent = None if random.randint(1, 10) == 1 else random.choice(created_nodes)
+                payload = None
+                if type is DBType.INTEGER:
+                    payload = random.randint(1,65536)
+                if type is DBType.CHAR32K:
+                    payload = ''.join(random.choices(string.ascii_letters + string.digits, k=32768))
+                if type is DBType.CHAR8K:
+                    payload = ''.join(random.choices(string.ascii_letters + string.digits, k=8192))
+
+                txn = client.txn()
+                node_name = table_name + str(idx)
+                try:
+                    txn.mutate(set_nquads='_:' + node_name + ' <' + table_name + '.id> "' + str(idx) + '" .')
+                    txn.mutate(set_nquads='_:' + node_name + ' <' + table_name + '.payload> "' + str(payload) + '" .')
+                    created_nodes.append(node_name)
+
+                    txn.commit()
+                finally:
+                    txn.discard()
+
+
 if __name__ == '__main__':
-    memgraph_operations()
+    #cypher_operations(memgraph_config, "memgraph")
+    #cypher_operations(neo4j_config, "neo4j")
+    dgraph_operations()
