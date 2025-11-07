@@ -133,7 +133,6 @@ def postgres_operations():
             for length in DBLength:
                 for type in DBTypePostgres:
                     table_name = length.name.lower() + "_" + type.name.lower()
-                    print(table_name)
                     created_nodes = [None]
                     query = "INSERT INTO " + table_name + " (payload, parent) VALUES (%s, %s)"
                     for i in range(0, length.value):
