@@ -116,15 +116,7 @@ def maria_oqgraph_operations():
                         + "KEY (destid))"
                     curs.execute(query)
 
-                    query = "CREATE TABLE IF NOT EXISTS " + table_name + "_graph" \
-                        + "(latch VARCHAR(32) NULL," \
-                        + "origid BIGINT UNSIGNED NULL," \
-                        + "destid BIGINT UNSIGNED NULL," \
-                        + "payload " + type.value + " NOT NULL," \
-                        + "seq BIGINT UNSIGNED NULL," \
-                        + "linkid BIGINT UNSIGNED NULL," \
-                        + "KEY (latch, origid, destid) USING HASH," \
-                        + "KEY (latch, destid, origid) USING HASH) " \
+                    query = "CREATE TABLE IF NOT EXISTS " + table_name + "_graph " \
                         + "ENGINE=OQGRAPH " \
                         + "data_table='" + table_name + "_backing' origid='origid' destid='destid'"
                     curs.execute(query)
@@ -242,5 +234,5 @@ def apache_age_operations():
 
 if __name__ == '__main__':
     #aerospike_graph_operations()
-    #maria_oqgraph_operations()
-    apache_age_operations()
+    maria_oqgraph_operations()
+    #apache_age_operations()

@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS payload_graph_backing (
+    origid INT NOT NULL,
+    destid INT NOT NULL,
+    payload INT NOT NULL,
+    PRIMARY KEY (origid, destid),
+    KEY (destid)
+)
+
+CREATE TABLE IF NOT EXISTS payload_graph 
+ENGINE=OQGRAPH 
+data_table='payload_graph_backing' origid='origid' destid='destid'
