@@ -1,0 +1,37 @@
+LOAD 'age';
+SET search_path=ag_catalog, 'dbbench', public;
+
+S0
+WITH nodes_with_vertices AS (
+    SELECT * FROM cypher('onek_integer', $$MATCH (n:Node)-[:PARENT_OF]->() RETURN n$$) AS (v agtype)
+    UNION
+    SELECT * FROM cypher('onek_integer', $$MATCH ()-[:PARENT_OF]->(n:Node) RETURN n$$) AS (n2 agtype)
+),
+all_nodes AS (
+    SELECT * FROM cypher('onek_integer', $$MATCH (n:Node) RETURN n$$) AS (f agtype)
+)
+SELECT COUNT(*) FROM all_nodes LEFT JOIN nodes_with_vertices ON all_nodes.f = nodes_with_vertices.v WHERE nodes_with_vertices.v IS NULL;
+
+S4
+WITH nodes_with_in_vertices AS (
+    SELECT * FROM cypher('onek_integer', $$MATCH ()-[:PARENT_OF]->(n:Node) RETURN n$$) AS (v agtype)
+),
+all_nodes AS (
+    SELECT * FROM cypher('onek_integer', $$MATCH (n:Node)-[x*0..4]->(o:Node) RETURN n$$) AS (f agtype)
+)
+SELECT COUNT(*) FROM all_nodes LEFT JOIN nodes_with_in_vertices ON all_nodes.f = nodes_with_in_vertices.v WHERE nodes_with_in_vertices.v IS NULL;
+
+S128
+
+S256
+
+S512
+
+I1
+SELECT * FROM cypher('onek_integer', $$MATCH (n:Node) WITH n, COUNT(*) AS _ WHERE n.payload = 65535 RETURN n$$) AS (n agtype);
+
+I2
+SELECT * FROM cypher('onek_integer', $$MATCH (n:Node) WITH n, COUNT(*) AS _ WHERE n.payload > 65535 RETURN n$$) AS (n agtype);
+
+C1
+SELECT * FROM cypher('onek_char8k', $$MATCH (n:Node) WITH n, COUNT(*) AS _ WHERE n.payload CONTAINS 'asdf' RETURN n$$) AS (n agtype);
