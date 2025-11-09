@@ -1,0 +1,29 @@
+S0
+SELECT COUNT(*) FROM onek_integer_graph i WHERE i.origid = 0 AND NOT EXISTS (SELECT 1 FROM onek_integer_graph t WHERE i.destid = t.origid);
+
+S4
+SET SESSION max_recursive_iterations = 4;
+WITH RECURSIVE cte_parent_child AS (
+    SELECT destid FROM onek_integer_graph WHERE origid = 0
+    UNION ALL
+    SELECT t.destid FROM onek_integer_graph t INNER JOIN cte_parent_child cte ON t.origid = cte.destid
+)
+SELECT COUNT(*) from cte_parent_child;
+
+S128
+SET SESSION max_recursive_iterations = 128;
+
+S256
+SET SESSION max_recursive_iterations = 256;
+
+S512
+SET SESSION max_recursive_iterations = 512;
+
+I1
+SELECT COUNT(*) FROM onek_integer_backing WHERE payload = 65535;
+
+I2
+SELECT COUNT(*) FROM onek_integer_backing WHERE payload < 32767;
+
+C1
+SELECT COUNT(*) FROM onek_char8k_backing WHERE payload LIKE '%asdf%';

@@ -72,7 +72,7 @@ def dgraph_operations():
     for length in DBLength:
         for type in DBType:
             table_name = length.name.lower() + type.name.lower()
-            created_nodes = []
+            created_nodes = [None]
             payload_type = 'int' if type is DBType.INTEGER else 'string'
             schema = table_name + '.id: int @index(int) .\n' \
                 + table_name + '.payload: ' + payload_type + ' .\n' \

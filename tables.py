@@ -6,7 +6,7 @@ GRAPH_DIST = 20
 class DBLength(Enum):
     ONEK = 1000
     FIVEK = 5000
-    TENK = 10000
+    #TENK = 10000
     #HUNDREDK = 100000
 
 class DBType(Enum):
