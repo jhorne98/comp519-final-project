@@ -3,19 +3,19 @@ MATCH (n1:Node)-[r:PARENT_OF]->(n2:Node) WHERE n1.table = 'onek_integer' AND n2.
 DROP GRAPH
 
 S0
-MATCH (n:Node) WHERE n.table = 'onek_integer' AND NOT (n)-[:PARENT_OF]->() AND NOT ()-[:PARENT_OF]->(n) RETURN *
+MATCH (n:Node) WHERE n.table = 'onek_integer' AND NOT (n)-[:PARENT_OF]->() AND NOT ()-[:PARENT_OF]->(n) RETURN COUNT(n)
 
 S4
-MATCH (n:Node)-[x*1..4]->(o:Node) WHERE n.table = 'onek_integer' AND NOT ()-[:PARENT_OF]->(n) RETURN COUNT(n)
+MATCH (n:Node)-[x*0..4]->(o:Node) WHERE n.table = 'onek_integer' AND NOT ()-[:PARENT_OF]->(n) RETURN COUNT(n)
 
 S128
-MATCH (n:Node)-[x*1..128]->(o:Node) WHERE n.table = 'onek_integer' AND NOT ()-[:PARENT_OF]->(n) RETURN COUNT(n)
+MATCH (n:Node)-[x*0..128]->(o:Node) WHERE n.table = 'onek_integer' AND NOT ()-[:PARENT_OF]->(n) RETURN COUNT(n)
 
 S256
-MATCH (n:Node)-[x*1..256]->(o:Node) WHERE n.table = 'onek_integer' AND NOT ()-[:PARENT_OF]->(n) RETURN COUNT(n)
+MATCH (n:Node)-[x*0..256]->(o:Node) WHERE n.table = 'onek_integer' AND NOT ()-[:PARENT_OF]->(n) RETURN COUNT(n)
 
 S512
-MATCH (n:Node)-[x*1..512]->(o:Node) WHERE n.table = 'onek_integer' AND NOT ()-[:PARENT_OF]->(n) RETURN COUNT(n)
+MATCH (n:Node)-[x*0..512]->(o:Node) WHERE n.table = 'onek_integer' AND NOT ()-[:PARENT_OF]->(n) RETURN COUNT(n)
 
 I1
 MATCH (n:Node) WHERE n.table = 'onek_integer' AND n.payload = 65535 RETURN COUNT(n)
