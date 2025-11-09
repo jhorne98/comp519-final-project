@@ -8,26 +8,11 @@ import psycopg2
 import aerospike
 from aerospike import exception as ae_ex # type: ignore
 
+from tables import DBLength, DBType
+
 user = 'dbbench'
 passwd = 'Bd8EtstJXINw3yfzzA97'
 dbname = 'relationalgraphbench'
-
-# Table query configs
-class DBLength(Enum):
-    ONEK = 1000
-    FIVEK = 5000
-    TENK = 10000
-    HUNDREDK = 100000
-
-class DBType(Enum):
-    INTEGER = "INT"
-    CHAR8K = "VARCHAR(8192)"
-    CHAR32K = "TEXT(32768)"
-
-class DBTypePostgres(Enum):
-    INTEGER = "INT"
-    CHAR8K = "VARCHAR(8192)"
-    CHAR32K = "TEXT"
 
 # Database configs
 mariadb_config = {
@@ -188,8 +173,3 @@ def aerospike_operations():
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
-
-if __name__ == "__main__":
-    #mariadb_operations()
-    #postgres_operations()
-    aerospike_operations()

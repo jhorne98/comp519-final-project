@@ -10,26 +10,11 @@ from gremlin_python.process.traversal import P
 import mariadb
 import psycopg2
 
+from tables import DBLength, DBType, DBTypePostgres
+
 user = 'dbbench'
 passwd = 'Bd8EtstJXINw3yfzzA97'
 dbname = 'extensiongraphbench'
-
-# Table query configs
-class DBLength(Enum):
-    ONEK = 1000
-    #FIVEK = 5000
-    #TENK = 10000
-    #HUNDREDK = 100000
-
-class DBType(Enum):
-    INTEGER = "INT"
-    CHAR8K = "VARCHAR(8192)"
-    CHAR32K = "TEXT(32768)"
-
-class DBTypePostgres(Enum):
-    INTEGER = "INT"
-    CHAR8K = "VARCHAR(8192)"
-    CHAR32K = "TEXT"
 
 # Database configs
 aerospike_graph_config = {
@@ -230,9 +215,3 @@ def apache_age_operations():
             cursor.close()
         if conn:
             conn.close()
-            
-
-if __name__ == '__main__':
-    #aerospike_graph_operations()
-    maria_oqgraph_operations()
-    #apache_age_operations()

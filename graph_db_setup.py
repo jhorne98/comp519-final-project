@@ -6,21 +6,11 @@ import string
 from neo4j import GraphDatabase
 import pydgraph
 
+from tables import DBLength, DBType
+
 user = 'dbbench'
 passwd = 'Bd8EtstJXINw3yfzzA97'
 dbname = 'relationalgraphbench'
-
-# Table query configs
-class DBLength(Enum):
-    ONEK = 1000
-    #FIVEK = 5000
-    #TENK = 10000
-    #HUNDREDK = 100000
-
-class DBType(Enum):
-    INTEGER = "INT"
-    CHAR8K = "VARCHAR(8192)"
-    CHAR32K = "TEXT(32768)"
 
 # Database config
 memgraph_config = {
@@ -45,9 +35,9 @@ def cypher_operations(config, db):
         for length in DBLength:
             for type in DBType:
                 table_name = length.name.lower() + "_" + type.name.lower()
-                created_nodes = [None]
+                created_nodes = []
                 for idx in range(0, length.value):
-                    parent = None if random.randint(1, 10) == 1 else random.choice(created_nodes)
+                    parent = None if len(created_nodes) == 0 else random.choice(created_nodes)
                     payload = None
                     if type is DBType.INTEGER:
                         payload = random.randint(1,65536)
@@ -82,7 +72,7 @@ def dgraph_operations():
     for length in DBLength:
         for type in DBType:
             table_name = length.name.lower() + type.name.lower()
-            created_nodes = [None]
+            created_nodes = []
             payload_type = 'int' if type is DBType.INTEGER else 'string'
             schema = table_name + '.id: int @index(int) .\n' \
                 + table_name + '.payload: ' + payload_type + ' .\n' \
@@ -94,7 +84,7 @@ def dgraph_operations():
             #op = pydgraph.Operation(drop_all=True)
             client.alter(op)
             for idx in range(0, length.value):
-                parent = None if random.randint(1, 10) == 1 else random.choice(created_nodes)
+                parent = None if len(created_nodes) == 0 else random.choice(created_nodes)
                 payload = None
                 if type is DBType.INTEGER:
                     payload = random.randint(1,65536)
@@ -113,9 +103,3 @@ def dgraph_operations():
                     txn.commit()
                 finally:
                     txn.discard()
-
-
-if __name__ == '__main__':
-    #cypher_operations(memgraph_config, "memgraph")
-    #cypher_operations(neo4j_config, "neo4j")
-    dgraph_operations()
