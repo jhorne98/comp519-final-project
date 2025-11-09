@@ -12,12 +12,14 @@ if __name__ == '__main__':
             relational_db_setup.postgres_operations()
         if 'aerospike' in sys.argv:
             relational_db_setup.aerospike_operations()
+
         if 'memgraph' in sys.argv:
             graph_db_setup.cypher_operations(graph_db_setup.memgraph_config, "memgraph")
         if 'neo4j' in sys.argv:
             graph_db_setup.cypher_operations(graph_db_setup.neo4j_config, "neo4j")
         if 'dgraph' in sys.argv:
             graph_db_setup.dgraph_operations()
+
         if 'aerospike_graph' in sys.argv:
             graph_extension_setup.aerospike_graph_operations()
         if 'oqgraph' in sys.argv:
