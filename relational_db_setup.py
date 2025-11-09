@@ -8,7 +8,7 @@ import psycopg2
 import aerospike
 from aerospike import exception as ae_ex # type: ignore
 
-from tables import DBLength, DBType
+from tables import DBLength, DBType, DBTypePostgres
 
 user = 'dbbench'
 passwd = 'Bd8EtstJXINw3yfzzA97'
