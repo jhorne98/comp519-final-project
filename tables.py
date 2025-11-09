@@ -1,5 +1,7 @@
 from enum import Enum
 
+GRAPH_DIST = 20
+
 # Table query configs
 class DBLength(Enum):
     ONEK = 1000

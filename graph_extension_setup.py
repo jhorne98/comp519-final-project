@@ -10,7 +10,7 @@ from gremlin_python.process.traversal import P
 import mariadb
 import psycopg2
 
-from tables import DBLength, DBType, DBTypePostgres
+from tables import GRAPH_DIST, DBLength, DBType, DBTypePostgres
 
 user = 'dbbench'
 passwd = 'Bd8EtstJXINw3yfzzA97'
@@ -48,7 +48,7 @@ def aerospike_graph_operations():
                 table_name = length.name.lower() + type.name.lower()
                 created_nodes = [None]
                 for i in range(1, length.value+1):
-                    parent = None if random.randint(1, 10) == 1 else random.choice(created_nodes)
+                    parent = None if random.randint(1, GRAPH_DIST) == 1 else random.choice(created_nodes)
                     payload = None
                     if type is DBType.INTEGER:
                         payload = random.randint(1,65536)
@@ -119,7 +119,7 @@ def maria_oqgraph_operations():
                     created_nodes = [0]
                     query = "INSERT INTO " + table_name + "_backing (origid, destid, payload) VALUES (?, ?, ?)"
                     for i in range(1, length.value+1):
-                        parent = 0 if random.randint(1, 10) == 1 else random.choice(created_nodes)
+                        parent = 0 if random.randint(1, GRAPH_DIST) == 1 else random.choice(created_nodes)
                         if type is DBType.INTEGER:
                             curs.execute(query, (parent, i, random.randint(1, 65536)))
                         elif type is DBType.CHAR32K:
@@ -178,7 +178,7 @@ def apache_age_operations():
                     created_nodes = [None]
                     #query = "INSERT INTO " + table_name + " (payload, parent) VALUES (%s, %s)"
                     for idx in range(1, length.value+1):
-                        parent = None if random.randint(1, 10) == 1 else random.choice(created_nodes)
+                        parent = None if random.randint(1, GRAPH_DIST) == 1 else random.choice(created_nodes)
                         payload = None
 
                         if type is DBTypePostgres.INTEGER:

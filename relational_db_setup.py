@@ -8,7 +8,7 @@ import psycopg2
 import aerospike
 from aerospike import exception as ae_ex # type: ignore
 
-from tables import DBLength, DBType, DBTypePostgres
+from tables import GRAPH_DIST, DBLength, DBType, DBTypePostgres
 
 user = 'dbbench'
 passwd = 'Bd8EtstJXINw3yfzzA97'
@@ -67,7 +67,7 @@ def mariadb_operations():
                     created_nodes = [None]
                     query = "INSERT INTO " + table_name + "(payload, parent) VALUES (?, ?)"
                     for i in range(0, length.value):
-                        parent = None if random.randint(1, 10) == 1 else random.choice(created_nodes)
+                        parent = None if random.randint(1, GRAPH_DIST) == 1 else random.choice(created_nodes)
                         if type is DBType.INTEGER:
                             curs.execute(query, (random.randint(1, 65536), parent))
                         elif type is DBType.CHAR32K:
@@ -121,7 +121,7 @@ def postgres_operations():
                     created_nodes = [None]
                     query = "INSERT INTO " + table_name + " (payload, parent) VALUES (%s, %s)"
                     for i in range(0, length.value):
-                        parent = None if random.randint(1, 10) == 1 else random.choice(created_nodes)
+                        parent = None if random.randint(1, GRAPH_DIST) == 1 else random.choice(created_nodes)
                         if type is DBTypePostgres.INTEGER:
                             curs.execute(query, (random.randint(1, 65536), parent))
                         elif type is DBTypePostgres.CHAR32K:
@@ -155,7 +155,7 @@ def aerospike_operations():
             for name in DBType:
                 created_nodes = [None]
                 for i in range(1, length.value+1):
-                    parent = None if random.randint(1, 10) == 1 else random.choice(created_nodes)
+                    parent = None if random.randint(1, GRAPH_DIST) == 1 else random.choice(created_nodes)
                     payload = None
                     if type is DBType.INTEGER:
                         payload = random.randint(1,65536)

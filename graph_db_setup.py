@@ -6,7 +6,7 @@ import string
 from neo4j import GraphDatabase
 import pydgraph
 
-from tables import DBLength, DBType
+from tables import GRAPH_DIST, DBLength, DBType
 
 user = 'dbbench'
 passwd = 'Bd8EtstJXINw3yfzzA97'
@@ -35,9 +35,9 @@ def cypher_operations(config, db):
         for length in DBLength:
             for type in DBType:
                 table_name = length.name.lower() + "_" + type.name.lower()
-                created_nodes = []
+                created_nodes = [None]
                 for idx in range(0, length.value):
-                    parent = None if len(created_nodes) == 0 else random.choice(created_nodes)
+                    parent = None if random.randint(1, GRAPH_DIST) == 1 else random.choice(created_nodes)
                     payload = None
                     if type is DBType.INTEGER:
                         payload = random.randint(1,65536)
@@ -84,7 +84,7 @@ def dgraph_operations():
             #op = pydgraph.Operation(drop_all=True)
             client.alter(op)
             for idx in range(0, length.value):
-                parent = None if len(created_nodes) == 0 else random.choice(created_nodes)
+                parent = None if random.randint(1, GRAPH_DIST) == 1 else random.choice(created_nodes)
                 payload = None
                 if type is DBType.INTEGER:
                     payload = random.randint(1,65536)
