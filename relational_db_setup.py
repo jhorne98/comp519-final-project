@@ -152,7 +152,8 @@ def aerospike_operations():
 
     try:
         for length in DBLength:
-            for name in DBType:
+            for type in DBType:
+                table_name = length.name.lower() + "_" + type.name.lower()
                 created_nodes = [None]
                 for i in range(1, length.value+1):
                     parent = None if random.randint(1, GRAPH_DIST) == 1 else random.choice(created_nodes)
@@ -164,12 +165,17 @@ def aerospike_operations():
                     if type is DBType.CHAR8K:
                         payload = ''.join(random.choices(string.ascii_letters + string.digits, k=8192))
                     record = {'id':i, 'payload':payload, 'parent':parent}
-                    client.put(('test', length.name + "_"+ name.name, 'id'+str(record['id'])), record)
+                    client.put((dbname, table_name, 'id'+str(record['id'])), record)
                     created_nodes.append(i)
                 try:
-                    client.index_integer_create("test", length.name + "_" + name.name, "parent", "test_" + length.name + "_" + name.name + "_idx")
+                    client.index_integer_create(dbname, table_name, "id", dbname + "_" + table_name + "_id")
+                    client.index_integer_create(dbname, table_name, "parent", dbname + "_" + table_name + "_parent")
+                    if type is DBType.INTEGER:
+                        client.index_integer_create(dbname, table_name, "payload", dbname + "_" + table_name + "_payload")
+                    else:
+                        client.index_string_create(dbname, table_name, "payload", dbname + "_" + table_name + "_payload")
                 except ae_ex.IndexFoundError:
                     pass
 
     except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
+        print("Error: {0}".format(e), file=sys.stderr)
