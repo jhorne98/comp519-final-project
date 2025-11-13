@@ -1,0 +1,32 @@
+hundredk_integer S0
+hundredk_integer S4
+hundredk_integer S128
+hundredk_integer S256
+hundredk_integer I1
+hundredk_integer I2
+hundredk_char8k S0
+hundredk_char8k S4
+hundredk_char8k S128
+hundredk_char8k S256
+hundredk_char8k C1
+hundredk_char32k S0
+hundredk_char32k S4
+hundredk_char32k S128
+hundredk_char32k S256
+hundredk_char32k C1
+('hundredk_integer', 'S0', 0.03651772279990837)
+('hundredk_integer', 'S4', 0.04603905719704926)
+('hundredk_integer', 'S128', 0.07091543620917946)
+('hundredk_integer', 'S256', 0.07024071409832686)
+('hundredk_integer', 'I1', 0.04385182270780206)
+('hundredk_integer', 'I2', 0.044985428196378054)
+('hundredk_char8k', 'S0', 0.04357879279414192)
+('hundredk_char8k', 'S4', 0.0514106975053437)
+('hundredk_char8k', 'S128', 0.0729368949891068)
+('hundredk_char8k', 'S256', 0.0736818750970997)
+('hundredk_char8k', 'C1', 0.5517989396001213)
+('hundredk_char32k', 'S0', 0.038876156893093136)
+('hundredk_char32k', 'S4', 0.05350548119749874)
+('hundredk_char32k', 'S128', 0.07021149430656806)
+('hundredk_char32k', 'S256', 0.07115043209632858)
+('hundredk_char32k', 'C1', 2.0126198946032674)

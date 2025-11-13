@@ -9,31 +9,7 @@ import aerospike
 from aerospike import exception as ae_ex # type: ignore
 
 from tables import GRAPH_DIST, DBLength, DBType, DBTypePostgres
-
-user = 'dbbench'
-passwd = 'Bd8EtstJXINw3yfzzA97'
-dbname = 'relationalgraphbench'
-
-# Database configs
-mariadb_config = {
-    'host': 'localhost',
-    'port': 3306,
-    'user': user,
-    'password': passwd,
-    'database': dbname,
-}
-
-postgres_config = {
-    'host': 'localhost',
-    'port': 5432,
-    'user': user,
-    'password': passwd,
-    'dbname': dbname,
-}
-
-aerospike_config = {
-    'hosts': [('localhost', 3000)]
-}
+import configs
 
 def mariadb_operations():
     conn = None
@@ -41,7 +17,7 @@ def mariadb_operations():
 
     # Connect to the mariadb service
     try:
-        conn = mariadb.connect(**mariadb_config)
+        conn = mariadb.connect(**configs.mariadb_config)
         curs = conn.cursor()
 
         # Create tables
@@ -95,7 +71,7 @@ def postgres_operations():
     cursor = None
 
     try:
-        conn = psycopg2.connect(**postgres_config)
+        conn = psycopg2.connect(**configs.postgres_config)
         curs = conn.cursor()
         
         # Create tables
@@ -145,7 +121,7 @@ def postgres_operations():
 
 def aerospike_operations():
     try:
-        client = aerospike.client(aerospike_config).connect()
+        client = aerospike.client(configs.aerospike_config).connect()
     except aerospike.exception.ClientError as e:
         print("Error occured in Aerospike connection: {0} [{1}]".format(e.msg, e.code))
         sys.exit(1)
@@ -162,18 +138,17 @@ def aerospike_operations():
                         payload = random.randint(1,65536)
                     if type is DBType.CHAR32K:
                         payload = ''.join(random.choices(string.ascii_letters + string.digits, k=32768))
-                    if type is DBType.CHAR8K:
                         payload = ''.join(random.choices(string.ascii_letters + string.digits, k=8192))
                     record = {'id':i, 'payload':payload, 'parent':parent}
-                    client.put((dbname, table_name, 'id'+str(record['id'])), record)
+                    client.put((configs.dbname, table_name, 'id'+str(record['id'])), record)
                     created_nodes.append(i)
                 try:
-                    client.index_integer_create(dbname, table_name, "id", dbname + "_" + table_name + "_id")
-                    client.index_integer_create(dbname, table_name, "parent", dbname + "_" + table_name + "_parent")
+                    client.index_integer_create(configs.dbname, table_name, "id", configs.dbname + "_" + table_name + "_id")
+                    client.index_integer_create(configs.dbname, table_name, "parent", configs.dbname + "_" + table_name + "_parent")
                     if type is DBType.INTEGER:
-                        client.index_integer_create(dbname, table_name, "payload", dbname + "_" + table_name + "_payload")
+                        client.index_integer_create(configs.dbname, table_name, "payload", configs.dbname + "_" + table_name + "_payload")
                     else:
-                        client.index_string_create(dbname, table_name, "payload", dbname + "_" + table_name + "_payload")
+                        client.index_string_create(configs.dbname, table_name, "payload", configs.dbname + "_" + table_name + "_payload")
                 except ae_ex.IndexFoundError:
                     pass
 

@@ -2,6 +2,8 @@ import relational_db_setup
 import graph_db_setup
 import graph_extension_setup
 
+import configs
+
 import sys
 
 if __name__ == '__main__':
@@ -14,9 +16,9 @@ if __name__ == '__main__':
             relational_db_setup.aerospike_operations()
 
         if 'memgraph' in sys.argv:
-            graph_db_setup.cypher_operations(graph_db_setup.memgraph_config, "memgraph")
+            graph_db_setup.cypher_operations(configs.memgraph_config, "memgraph")
         if 'neo4j' in sys.argv:
-            graph_db_setup.cypher_operations(graph_db_setup.neo4j_config, "neo4j")
+            graph_db_setup.cypher_operations(configs.neo4j_config, "neo4j")
         if 'dgraph' in sys.argv:
             graph_db_setup.dgraph_operations()
 

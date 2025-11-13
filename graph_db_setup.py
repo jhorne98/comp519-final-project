@@ -7,25 +7,7 @@ from neo4j import GraphDatabase
 import pydgraph
 
 from tables import GRAPH_DIST, DBLength, DBType
-
-user = 'dbbench'
-passwd = 'Bd8EtstJXINw3yfzzA97'
-dbname = 'relationalgraphbench'
-
-# Database config
-memgraph_config = {
-    'uri': "bolt://localhost:7687",
-    'auth': ("", "")
-}
-
-neo4j_config = {
-    'uri': "neo4j://localhost",
-    'auth': ("neo4j", "Bd8EtstJXINw3yfzzA97")
-}
-
-dgraph_config = {
-    'uri': "localhost:9080"
-}
+import configs
 
 # Memgraph also uses Neo4j's GraphDatabase driver, so operations for both can be generalized
 def cypher_operations(config, db):
@@ -66,7 +48,7 @@ def cypher_operations(config, db):
                         )
 
 def dgraph_operations():
-    client_stub = pydgraph.DgraphClientStub(dgraph_config['uri'])
+    client_stub = pydgraph.DgraphClientStub(configs.dgraph_config['uri'])
     client = pydgraph.DgraphClient(client_stub)
 
     for length in DBLength:
