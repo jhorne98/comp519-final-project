@@ -11,31 +11,12 @@ import mariadb
 import psycopg2
 
 from tables import GRAPH_DIST, DBLength, DBType, DBTypePostgres
-
-user = 'dbbench'
-passwd = 'Bd8EtstJXINw3yfzzA97'
-dbname = 'extensiongraphbench'
+import configs
 
 # Database configs
 aerospike_graph_config = {
     'host': 'localhost',
     'port': 8182,
-}
-
-mariadb_config = {
-    'host': 'localhost',
-    'port': 3306,
-    'user': user,
-    'password': passwd,
-    'database': dbname,
-}
-
-postgres_config = {
-    'host': 'localhost',
-    'port': 5432,
-    'user': user,
-    'password': passwd,
-    'dbname': dbname,
 }
 
 def aerospike_graph_operations():
@@ -79,7 +60,7 @@ def maria_oqgraph_operations():
 
     # Connect to the mariadb service
     try:
-        conn = mariadb.connect(**mariadb_config)
+        conn = mariadb.connect(**configs.mariadb_config)
         curs = conn.cursor()
 
         try:
@@ -147,7 +128,7 @@ def apache_age_operations():
     cursor = None
 
     try:
-        conn = psycopg2.connect(**postgres_config)
+        conn = psycopg2.connect(**configs.postgres_config)
         curs = conn.cursor()
 
         curs.execute("CREATE EXTENSION age")
