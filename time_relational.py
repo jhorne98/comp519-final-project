@@ -1,10 +1,12 @@
 import timeit
 import sys
+import random
+import string
 
 import mariadb
 import psycopg2
 
-from tables import QUERY_RUNS, DBLength, DBType, DBTypePostgres
+from tables import QUERY_RUNS, C_MAX_LENGTH, DBLength, DBType, DBTypePostgres
 import configs
 
 def time_mariadb_queries():
@@ -38,20 +40,21 @@ def time_mariadb_queries():
                         print(table_name, "S"+str(recur))
 
                     if type is DBType.INTEGER:
-                        query = "SELECT COUNT(*) FROM " + table_name + " WHERE payload = 65535"
+                        query = "SELECT COUNT(*) FROM " + table_name + " WHERE payload = " + str(random.randint(0, 65536))
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
                         results.append((table_name, "I1", curs_time/QUERY_RUNS))
                         print(table_name, "I1")
 
-                        query = "SELECT COUNT(*) FROM " + table_name + " WHERE payload < 32767"
+                        query = "SELECT COUNT(*) FROM " + table_name + " WHERE payload < " + str(random.randint(0, 65536))
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
                         results.append((table_name, "I2", curs_time/QUERY_RUNS))
                         print(table_name, "I2")
                     else:
-                        query = "SELECT COUNT(*) FROM " + table_name + " WHERE payload LIKE '%asdf%'"
-                        curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
-                        results.append((table_name, "C1", curs_time/QUERY_RUNS))
-                        print(table_name, "C1")
+                        for c in range(1,C_MAX_LENGTH+1):
+                            query = "SELECT COUNT(*) FROM " + table_name + " WHERE payload LIKE '" + ''.join(random.choices(string.ascii_letters + string.digits, k=c)) + "'"
+                            curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
+                            results.append((table_name, "C1", c, curs_time/QUERY_RUNS))
+                            print(table_name, "C1")
             for line in results:
                 print(line)
 
@@ -98,20 +101,21 @@ def time_postgres_queries():
                         print(table_name, "S"+str(recur))
 
                     if type is DBType.INTEGER:
-                        query = "SELECT COUNT(*) FROM " + table_name + " WHERE payload = 65535"
+                        query = "SELECT COUNT(*) FROM " + table_name + " WHERE payload = " + str(random.randint(0, 65536))
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
                         results.append((table_name, "I1", curs_time/QUERY_RUNS))
                         print(table_name, "I1")
 
-                        query = "SELECT COUNT(*) FROM " + table_name + " WHERE payload < 32767"
+                        query = "SELECT COUNT(*) FROM " + table_name + " WHERE payload < " + str(random.randint(0, 65536))
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
                         results.append((table_name, "I2", curs_time/QUERY_RUNS))
                         print(table_name, "I2")
                     else:
-                        query = "SELECT COUNT(*) FROM " + table_name + " WHERE payload LIKE '%asdf%'"
-                        curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
-                        results.append((table_name, "C1", curs_time/QUERY_RUNS))
-                        print(table_name, "C1")
+                        for c in range(1,C_MAX_LENGTH+1):
+                            query = "SELECT COUNT(*) FROM " + table_name + " WHERE payload LIKE '" + ''.join(random.choices(string.ascii_letters + string.digits, k=c)) + "'"
+                            curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
+                            results.append((table_name, "C1", c, curs_time/QUERY_RUNS))
+                            print(table_name, "C1")
             for line in results:
                 print(line) 
         except (Exception, psycopg2.Error) as e:
