@@ -9,6 +9,7 @@ from gremlin_python.driver.driver_remote_connection import DriverRemoteConnectio
 from gremlin_python.process.traversal import P
 import mariadb
 import psycopg2
+from psycopg2 import extras
 
 from tables import GRAPH_DIST, DBLength, DBType, DBTypePostgres
 import configs
@@ -128,7 +129,7 @@ def apache_age_operations():
     cursor = None
 
     try:
-        conn = psycopg2.connect(**configs.postgres_config)
+        conn = psycopg2.connect(**configs.apache_age_config)
         curs = conn.cursor()
 
         curs.execute("CREATE EXTENSION age")
@@ -156,8 +157,19 @@ def apache_age_operations():
             for length in DBLength:
                 for type in DBTypePostgres:
                     table_name = length.name.lower() + "_" + type.name.lower()
+                    node_insertion_query = "SELECT * FROM cypher('" + table_name + "', $$ " \
+                        + "CREATE (n:Node {id: %s, payload: %s}) " \
+                        + "$$) as (v agtype)"
+                    edge_creation_query = "SELECT * FROM cypher('" + table_name + "', $$ " \
+                        + "MATCH (n1:Node), (n2:Node) " \
+                        + "WHERE n1.id=%s AND n2.id=%s " \
+                        + "CREATE (n1)-[e:PARENT_OF]->(n2) " \
+                        + "RETURN e " \
+                        + "$$) as (e agtype)"
+                    i=0
                     created_nodes = [None]
-                    #query = "INSERT INTO " + table_name + " (payload, parent) VALUES (%s, %s)"
+                    node_tuples = []
+                    edge_tuples = []
                     for idx in range(1, length.value+1):
                         parent = None if random.randint(1, GRAPH_DIST) == 1 else random.choice(created_nodes)
                         payload = None
@@ -165,25 +177,24 @@ def apache_age_operations():
                         if type is DBTypePostgres.INTEGER:
                             payload = str(random.randint(1, 65536))
                         elif type is DBTypePostgres.CHAR32K:
-                            payload = "'" + ''.join(random.choices(string.ascii_letters + string.digits, k=32768)) + "'"
+                            payload = ''.join(random.choices(string.ascii_letters + string.digits, k=32768))
                         elif type is DBTypePostgres.CHAR8K:
-                            payload = "'" + ''.join(random.choices(string.ascii_letters + string.digits, k=8192)) + "'"
+                            payload = ''.join(random.choices(string.ascii_letters + string.digits, k=8192))
 
-                        query = "SELECT * FROM cypher('" + table_name + "', $$ " \
-                            + "CREATE (n:Node {id: " + str(idx) + ", payload: " + payload + "}) " \
-                            + "$$) as (v agtype)"
-                        curs.execute(query)
+                        node_tuples.append((str(idx), payload))
                         created_nodes.append(idx)
 
                         if parent is not None:
-                            query = "SELECT * FROM cypher('" + table_name + "', $$ " \
-                                + "MATCH (n1:Node), (n2:Node) " \
-                                + "WHERE n1.id=" + str(parent) + " AND n2.id=" + str(idx) + " " \
-                                + "CREATE (n1)-[e:PARENT_OF]->(n2) " \
-                                + "RETURN e " \
-                                + "$$) as (e agtype)"
-                            curs.execute(query)
-            conn.commit()
+                            edge_tuples.append((str(parent), str(idx)))
+
+                        #print(idx)
+
+                    curs.executemany(node_insertion_query, node_tuples)
+                    print(table_name + " nodes inserted")
+                    conn.commit()
+                    extras.execute_batch(curs, edge_creation_query, edge_tuples)
+                    print(table_name + " edges inserted")
+                    conn.commit()
 
         except (Exception, psycopg2.Error) as e:
             print(f"Error creating graph: {e}")
