@@ -61,7 +61,7 @@ def maria_oqgraph_operations():
 
     # Connect to the mariadb service
     try:
-        conn = mariadb.connect(**configs.mariadb_config)
+        conn = mariadb.connect(**configs.mariadb_oqgraph_config)
         curs = conn.cursor()
 
         try:
@@ -109,6 +109,7 @@ def maria_oqgraph_operations():
                         elif type is DBType.CHAR8K:
                             curs.execute(query, (parent, i, ''.join(random.choices(string.ascii_letters + string.digits, k=8192))))
                         created_nodes.append(i)
+                    print("Created: " + table_name)
             conn.commit()
 
         except mariadb.Error as e:

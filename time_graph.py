@@ -48,5 +48,5 @@ def time_graph_queries(config):
             print(line)
 
 if __name__ == '__main__':
-    #time_graph_queries(configs.neo4j_config)
-    time_graph_queries(configs.memgraph_config)
+    time_graph_queries(configs.neo4j_config)
+    #time_graph_queries(configs.memgraph_config)
