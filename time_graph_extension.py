@@ -55,12 +55,17 @@ def time_mariadb_oqgraph_queries():
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
                         results.append((table_name, "I2", curs_time/QUERY_RUNS))
                         print(table_name, "I2")
+
+                        query = "SELECT COUNT(*) FROM " + table_name + "_backing WHERE MOD(payload, " + str(random.randint(0, 65536)) + ") = 0"
+                        curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
+                        results.append((table_name, "I3", curs_time/QUERY_RUNS))
+                        print(table_name, "I3")
                     else:
                         for c in range(1,C_MAX_LENGTH+1):
-                            query = "SELECT COUNT(*) FROM " + table_name + "_backing WHERE payload LIKE '" + ''.join(random.choices(string.ascii_letters + string.digits, k=c)) + "'"
+                            query = "SELECT COUNT(*) FROM " + table_name + "_backing WHERE payload LIKE '%" + ''.join(random.choices(string.ascii_letters + string.digits, k=c)) + "%'"
                             curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
                             results.append((table_name, "C1", c, curs_time/QUERY_RUNS))
-                            print(table_name, "C1")
+                            print(table_name, "C1:", c)
             for line in results:
                 print(line)
 
@@ -85,7 +90,7 @@ def time_apache_age_queries():
         curs = conn.cursor()
 
         #curs.execute("CREATE EXTENSION age")
-        #curs.execute("LOAD 'age'")
+        curs.execute("LOAD 'age'")
         curs.execute("SET search_path=ag_catalog, '$user', public;")
         conn.commit()
 
@@ -135,12 +140,17 @@ def time_apache_age_queries():
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
                         results.append((table_name, "I2", curs_time/QUERY_RUNS))
                         print(table_name, "I2")
+
+                        query = "SELECT * FROM cypher('" + table_name + "', $$MATCH (n:Node) WITH n, COUNT(*) AS _ WHERE n.payload % " + str(random.randint(0, 65536)) + " = 0 RETURN n$$) AS (n agtype);"
+                        curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
+                        results.append((table_name, "I3", curs_time/QUERY_RUNS))
+                        print(table_name, "I3")
                     else:
                         for c in range(1,C_MAX_LENGTH+1):
                             query = "SELECT * FROM cypher('" + table_name + "', $$MATCH (n:Node) WITH n, COUNT(*) AS _ WHERE n.payload CONTAINS '" + ''.join(random.choices(string.ascii_letters + string.digits, k=c)) + "' RETURN n$$) AS (n agtype);"
                             curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
                             results.append((table_name, "C1", c, curs_time/QUERY_RUNS))
-                            print(table_name, "C1")
+                            print(table_name, "C1:", c)
             for line in results:
                 print(line)
         except (Exception, psycopg2.Error) as e:
@@ -154,6 +164,3 @@ def time_apache_age_queries():
             cursor.close()
         if conn:
             conn.close()
-
-if __name__ == '__main__':
-    time_apache_age_queries()

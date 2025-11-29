@@ -40,6 +40,11 @@ def time_graph_queries(config):
                     curs_time = timeit.timeit(lambda: client.execute_query(query, database_=config['name']), number=QUERY_RUNS)
                     results.append((table_name, "I2", curs_time/QUERY_RUNS))
                     print(table_name, "I2")
+
+                    query = "MATCH (n:Node) WHERE n.table = '" + table_name + "' AND toInteger(n.payload) % " + str(random.randint(0, 65536)) + " = 0 RETURN COUNT(n)"
+                    curs_time = timeit.timeit(lambda: client.execute_query(query, database_=config['name']), number=QUERY_RUNS)
+                    results.append((table_name, "I3", curs_time/QUERY_RUNS))
+                    print(table_name, "I3")
                 else:
                     for c in range(1,C_MAX_LENGTH+1):
                         query = "MATCH (n:Node) WHERE n.table = '" + table_name + "' AND toString(n.payload) CONTAINS '" + ''.join(random.choices(string.ascii_letters + string.digits, k=c)) + "' RETURN COUNT(n)"
