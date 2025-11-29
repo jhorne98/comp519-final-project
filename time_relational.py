@@ -71,7 +71,7 @@ def time_postgres_queries():
     conn = None
     cursor = None
 
-    # Connect to the mariadb service
+    # Connect to the postgres service
     try:
         conn = psycopg2.connect(**configs.postgres_config)
         curs = conn.cursor()
