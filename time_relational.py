@@ -6,7 +6,7 @@ import string
 import mariadb
 import psycopg2
 
-from tables import QUERY_RUNS, C_MAX_LENGTH, DBLength, DBType, DBTypePostgres
+from tables import QUERY_RUNS, C_MAX_LENGTH, MAX_RECUR, DBLength, DBType, DBTypePostgres
 from helpers import compute_avg_query_time_ms
 import configs
 
@@ -31,9 +31,7 @@ def time_mariadb_queries():
                     results.append((table_name, "S0", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                     print(table_name, "S0")
 
-                    max_recursions = [4,128,256]
-
-                    for idx, recur in enumerate(max_recursions):
+                    for idx, recur in enumerate(MAX_RECUR):
                         curs.execute("SET SESSION max_recursive_iterations = " + str(recur))
                         query = "WITH RECURSIVE cte_parent_child AS (SELECT id FROM " + table_name + " WHERE parent IS NULL UNION ALL SELECT t.id FROM " + table_name + " t INNER JOIN cte_parent_child cte ON t.parent = cte.id) SELECT COUNT(*) from cte_parent_child"
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
@@ -97,9 +95,7 @@ def time_postgres_queries():
                     results.append((table_name, "S0", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                     print(table_name, "S0")
 
-                    max_recursions = [4,128,256]
-
-                    for idx, recur in enumerate(max_recursions):
+                    for idx, recur in enumerate(MAX_RECUR):
                         str_recur = str(recur)
                         query = "WITH RECURSIVE cte_parent_child AS (SELECT id, 0 AS depth FROM " + table_name + " WHERE parent IS NULL UNION ALL SELECT t.id, depth + 1 FROM " + table_name + " t INNER JOIN cte_parent_child cte ON t.parent = cte.id WHERE depth < " + str_recur + ") SELECT COUNT(*) from cte_parent_child"
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)

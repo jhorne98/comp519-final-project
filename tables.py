@@ -3,6 +3,7 @@ from enum import Enum
 GRAPH_DIST = 20
 QUERY_RUNS = 10
 C_MAX_LENGTH = 8
+MAX_RECUR = [4,16,128,256]
 
 # Table query configs
 class DBLength(Enum):

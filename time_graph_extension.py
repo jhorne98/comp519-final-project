@@ -6,7 +6,7 @@ import string
 import mariadb
 import psycopg2
 
-from tables import QUERY_RUNS, C_MAX_LENGTH, DBLength, DBType, DBTypePostgres
+from tables import QUERY_RUNS, C_MAX_LENGTH, MAX_RECUR, DBLength, DBType, DBTypePostgres
 from helpers import compute_avg_query_time_ms
 import configs
 
@@ -37,9 +37,7 @@ def time_mariadb_oqgraph_queries():
                     results.append((table_name, "S0", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                     print(table_name, "S0")
 
-                    max_recursions = [4,128,256]
-
-                    for idx, recur in enumerate(max_recursions):
+                    for idx, recur in enumerate(MAX_RECUR):
                         curs.execute("SET SESSION max_recursive_iterations = " + str(recur))
                         query = "WITH RECURSIVE cte_parent_child AS (SELECT destid FROM " + table_name + "_graph WHERE origid = 0 UNION ALL SELECT t.destid FROM " + table_name + "_graph t INNER JOIN cte_parent_child cte ON t.origid = cte.destid) SELECT COUNT(*) from cte_parent_child"
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
@@ -116,9 +114,7 @@ def time_apache_age_queries():
                     results.append((table_name, "S0", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                     print(table_name, "S0")
 
-                    max_recursions = [4,128,256]
-
-                    for idx, recur in enumerate(max_recursions):
+                    for idx, recur in enumerate(MAX_RECUR):
                         #query = "WITH RECURSIVE cte_parent_child AS (SELECT id FROM " + table_name + " WHERE parent IS NULL UNION ALL SELECT t.id FROM " + table_name + " t INNER JOIN cte_parent_child cte ON t.parent = cte.id) SELECT COUNT(*) from cte_parent_child"
                         query = "WITH nodes_with_in_vertices AS (" + \
                         "SELECT * FROM cypher('" + table_name + "', $$MATCH ()-[:PARENT_OF]->(n:Node) RETURN n$$) AS (v agtype)" + \
