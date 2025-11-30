@@ -4,7 +4,8 @@ import string
 
 from neo4j import GraphDatabase
 
-from tables import QUERY_RUNS, C_MAX_LENGTH, DBLength, DBType, DBTypePostgres
+from tables import QUERY_RUNS, C_MAX_LENGTH, DBLength, DBType
+from helpers import compute_avg_query_time_ms
 import configs
 
 def time_graph_queries(config):
@@ -19,7 +20,7 @@ def time_graph_queries(config):
 
                 query = "MATCH (n:Node) WHERE n.table = '" + table_name + "' AND NOT (n)-[:PARENT_OF]->() AND NOT ()-[:PARENT_OF]->(n) RETURN COUNT(n)"
                 curs_time = timeit.timeit(lambda: client.execute_query(query, database_=config['name']), number=QUERY_RUNS)
-                results.append((table_name, "S0", curs_time/QUERY_RUNS))
+                results.append((table_name, "S0", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                 print(table_name, "S0")
 
                 max_recursions = [4,128,256]
@@ -27,33 +28,29 @@ def time_graph_queries(config):
                 for recur in max_recursions:
                     query = "MATCH (n:Node)-[x*0.." + str(recur) + "]->(o:Node) WHERE n.table = '" + table_name + "' AND NOT ()-[:PARENT_OF]->(n) RETURN COUNT(n)"
                     curs_time = timeit.timeit(lambda: client.execute_query(query, database_=config['name']), number=QUERY_RUNS)
-                    results.append((table_name, "S" + str(recur), curs_time/QUERY_RUNS))
+                    results.append((table_name, "S" + str(recur), compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                     print(table_name, "S"+str(recur))
 
                 if type is DBType.INTEGER:
                     query = "MATCH (n:Node) WHERE n.table = '" + table_name + "' AND n.payload = " + str(random.randint(0, 65536)) + " RETURN COUNT(n)"
                     curs_time = timeit.timeit(lambda: client.execute_query(query, database_=config['name']), number=QUERY_RUNS)
-                    results.append((table_name, "I1", curs_time/QUERY_RUNS))
+                    results.append((table_name, "I1", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                     print(table_name, "I1")
 
                     query = "MATCH (n:Node) WHERE n.table = '" + table_name + "' AND toInteger(n.payload) < " + str(random.randint(0, 65536)) + " RETURN COUNT(n)"
                     curs_time = timeit.timeit(lambda: client.execute_query(query, database_=config['name']), number=QUERY_RUNS)
-                    results.append((table_name, "I2", curs_time/QUERY_RUNS))
+                    results.append((table_name, "I2", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                     print(table_name, "I2")
 
                     query = "MATCH (n:Node) WHERE n.table = '" + table_name + "' AND toInteger(n.payload) % " + str(random.randint(0, 65536)) + " = 0 RETURN COUNT(n)"
                     curs_time = timeit.timeit(lambda: client.execute_query(query, database_=config['name']), number=QUERY_RUNS)
-                    results.append((table_name, "I3", curs_time/QUERY_RUNS))
+                    results.append((table_name, "I3", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                     print(table_name, "I3")
                 else:
                     for c in range(1,C_MAX_LENGTH+1):
                         query = "MATCH (n:Node) WHERE n.table = '" + table_name + "' AND toString(n.payload) CONTAINS '" + ''.join(random.choices(string.ascii_letters + string.digits, k=c)) + "' RETURN COUNT(n)"
                         curs_time = timeit.timeit(lambda: client.execute_query(query, database_=config['name']), number=QUERY_RUNS)
-                        results.append((table_name, "C1", c, curs_time/QUERY_RUNS))
+                        results.append((table_name, "C1", c, compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                         print(table_name, "C1:", c)
         for line in results:
             print(line)
-
-if __name__ == '__main__':
-    time_graph_queries(configs.neo4j_config)
-    #time_graph_queries(configs.memgraph_config)

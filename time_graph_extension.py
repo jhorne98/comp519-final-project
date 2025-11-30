@@ -7,6 +7,7 @@ import mariadb
 import psycopg2
 
 from tables import QUERY_RUNS, C_MAX_LENGTH, DBLength, DBType, DBTypePostgres
+from helpers import compute_avg_query_time_ms
 import configs
 
 def time_mariadb_oqgraph_queries():
@@ -33,7 +34,7 @@ def time_mariadb_oqgraph_queries():
 
                     query = "SELECT COUNT(*) FROM " + table_name + "_graph i WHERE i.origid = 0 AND NOT EXISTS (SELECT 1 FROM " + table_name + "_graph t WHERE i.destid = t.origid)"
                     curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
-                    results.append((table_name, "S0", curs_time/QUERY_RUNS))
+                    results.append((table_name, "S0", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                     print(table_name, "S0")
 
                     max_recursions = [4,128,256]
@@ -42,29 +43,29 @@ def time_mariadb_oqgraph_queries():
                         curs.execute("SET SESSION max_recursive_iterations = " + str(recur))
                         query = "WITH RECURSIVE cte_parent_child AS (SELECT destid FROM " + table_name + "_graph WHERE origid = 0 UNION ALL SELECT t.destid FROM " + table_name + "_graph t INNER JOIN cte_parent_child cte ON t.origid = cte.destid) SELECT COUNT(*) from cte_parent_child"
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
-                        results.append((table_name, "S" + str(recur), curs_time/QUERY_RUNS))
+                        results.append((table_name, "S" + str(recur), compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                         print(table_name, "S"+str(recur))
 
                     if type is DBType.INTEGER:
                         query = "SELECT COUNT(*) FROM " + table_name + "_backing WHERE payload = " + str(random.randint(0, 65536))
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
-                        results.append((table_name, "I1", curs_time/QUERY_RUNS))
+                        results.append((table_name, "I1", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                         print(table_name, "I1")
 
                         query = "SELECT COUNT(*) FROM " + table_name + "_backing WHERE payload < " + str(random.randint(0, 65536))
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
-                        results.append((table_name, "I2", curs_time/QUERY_RUNS))
+                        results.append((table_name, "I2", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                         print(table_name, "I2")
 
                         query = "SELECT COUNT(*) FROM " + table_name + "_backing WHERE MOD(payload, " + str(random.randint(0, 65536)) + ") = 0"
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
-                        results.append((table_name, "I3", curs_time/QUERY_RUNS))
+                        results.append((table_name, "I3", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                         print(table_name, "I3")
                     else:
                         for c in range(1,C_MAX_LENGTH+1):
                             query = "SELECT COUNT(*) FROM " + table_name + "_backing WHERE payload LIKE '%" + ''.join(random.choices(string.ascii_letters + string.digits, k=c)) + "%'"
                             curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
-                            results.append((table_name, "C1", c, curs_time/QUERY_RUNS))
+                            results.append((table_name, "C1", c, compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                             print(table_name, "C1:", c)
             for line in results:
                 print(line)
@@ -112,7 +113,7 @@ def time_apache_age_queries():
                     ")" + \
                     "SELECT COUNT(*) FROM all_nodes LEFT JOIN nodes_with_vertices ON all_nodes.f = nodes_with_vertices.v WHERE nodes_with_vertices.v IS NULL;"
                     curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
-                    results.append((table_name, "S0", curs_time/QUERY_RUNS))
+                    results.append((table_name, "S0", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                     print(table_name, "S0")
 
                     max_recursions = [4,128,256]
@@ -127,29 +128,29 @@ def time_apache_age_queries():
                         ")" + \
                         "SELECT COUNT(*) FROM all_nodes LEFT JOIN nodes_with_in_vertices ON all_nodes.f = nodes_with_in_vertices.v WHERE nodes_with_in_vertices.v IS NULL;"
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
-                        results.append((table_name, "S" + str(recur), curs_time/QUERY_RUNS))
+                        results.append((table_name, "S" + str(recur), compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                         print(table_name, "S"+str(recur))
 
                     if type is DBType.INTEGER:
                         query = "SELECT * FROM cypher('" + table_name + "', $$MATCH (n:Node) WITH n, COUNT(*) AS _ WHERE n.payload = " + str(random.randint(0, 65536)) + " RETURN n$$) AS (n agtype);"
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
-                        results.append((table_name, "I1", curs_time/QUERY_RUNS))
+                        results.append((table_name, "I1", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                         print(table_name, "I1")
 
                         query = "SELECT * FROM cypher('" + table_name + "', $$MATCH (n:Node) WITH n, COUNT(*) AS _ WHERE n.payload > " + str(random.randint(0, 65536)) + " RETURN n$$) AS (n agtype);"
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
-                        results.append((table_name, "I2", curs_time/QUERY_RUNS))
+                        results.append((table_name, "I2", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                         print(table_name, "I2")
 
                         query = "SELECT * FROM cypher('" + table_name + "', $$MATCH (n:Node) WITH n, COUNT(*) AS _ WHERE n.payload % " + str(random.randint(0, 65536)) + " = 0 RETURN n$$) AS (n agtype);"
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
-                        results.append((table_name, "I3", curs_time/QUERY_RUNS))
+                        results.append((table_name, "I3", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                         print(table_name, "I3")
                     else:
                         for c in range(1,C_MAX_LENGTH+1):
                             query = "SELECT * FROM cypher('" + table_name + "', $$MATCH (n:Node) WITH n, COUNT(*) AS _ WHERE n.payload CONTAINS '" + ''.join(random.choices(string.ascii_letters + string.digits, k=c)) + "' RETURN n$$) AS (n agtype);"
                             curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
-                            results.append((table_name, "C1", c, curs_time/QUERY_RUNS))
+                            results.append((table_name, "C1", c, compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                             print(table_name, "C1:", c)
             for line in results:
                 print(line)
