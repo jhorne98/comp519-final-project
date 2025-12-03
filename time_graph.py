@@ -6,7 +6,6 @@ from neo4j import GraphDatabase
 
 from tables import QUERY_RUNS, C_MAX_LENGTH, MAX_RECUR, DBLength, DBType
 from helpers import compute_avg_query_time_ms
-import configs
 
 def time_graph_queries(config):
     with GraphDatabase.driver(config['uri'], auth=config['auth']) as client:
@@ -44,11 +43,21 @@ def time_graph_queries(config):
                     curs_time = timeit.timeit(lambda: client.execute_query(query, database_=config['name']), number=QUERY_RUNS)
                     results.append((table_name, "I3", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                     print(table_name, "I3")
+
+                    query = "CALL() { MATCH (n:Node {table: '" + table_name + "', payload: " + str(random.randint(0, 65536)) + "})<-[x*0..]-(o) RETURN n,count(o) AS depth } RETURN AVG(depth)"
+                    curs_time = timeit.timeit(lambda: client.execute_query(query, database_=config['name']), number=QUERY_RUNS)
+                    results.append((table_name, "R1", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
+                    print(table_name, "R1")
                 else:
                     for c in range(1,C_MAX_LENGTH+1):
                         query = "MATCH (n:Node) WHERE n.table = '" + table_name + "' AND toString(n.payload) CONTAINS '" + ''.join(random.choices(string.ascii_letters + string.digits, k=c)) + "' RETURN COUNT(n)"
                         curs_time = timeit.timeit(lambda: client.execute_query(query, database_=config['name']), number=QUERY_RUNS)
-                        results.append((table_name, "C1", c, compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
-                        print(table_name, "C1:", c)
+                        results.append((table_name, "C"+str(c), compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
+                        print(table_name, "C"+str(c))
+
+                    query = "CALL() { MATCH (n:Node {table: '" + table_name + "', payload: '" + ''.join(random.choices(string.ascii_letters + string.digits, k=4)) + "'})<-[x*0..]-(o) RETURN n,count(o) AS depth } RETURN AVG(depth)"
+                    curs_time = timeit.timeit(lambda: client.execute_query(query, database_=config['name']), number=QUERY_RUNS)
+                    results.append((table_name, "R1", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
+                    print(table_name, "R1")
         for line in results:
             print(line)

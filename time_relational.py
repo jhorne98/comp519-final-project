@@ -53,12 +53,22 @@ def time_mariadb_queries():
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
                         results.append((table_name, "I3", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                         print(table_name, "I3")
+
+                        query = "WITH RECURSIVE cte_parent AS (SELECT id, parent, 0 AS depth FROM " + table_name + " WHERE payload = " + str(random.randint(0, 65536)) + " UNION ALL SELECT t.id, t.parent, depth + 1 FROM " + table_name + " t INNER JOIN cte_parent cte ON cte.parent = t.id) SELECT AVG(depth) FROM cte_parent WHERE parent IS NULL;"
+                        curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
+                        results.append((table_name, "R1", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
+                        print(table_name, "R1")
                     else:
                         for c in range(1,C_MAX_LENGTH+1):
                             query = "SELECT COUNT(*) FROM " + table_name + " WHERE payload LIKE '%" + ''.join(random.choices(string.ascii_letters + string.digits, k=c)) + "%'"
                             curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
-                            results.append((table_name, "C1", c, compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
-                            print(table_name, "C1", c)
+                            results.append((table_name, "C"+str(c), compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
+                            print(table_name, "C"+str(c))
+
+                        query = "WITH RECURSIVE cte_parent AS (SELECT id, parent, 0 AS depth FROM " + table_name + " WHERE payload LIKE '%" + ''.join(random.choices(string.ascii_letters + string.digits, k=4)) + "%' UNION ALL SELECT t.id, t.parent, depth + 1 FROM " + table_name + " t INNER JOIN cte_parent cte ON cte.parent = t.id) SELECT AVG(depth) FROM cte_parent WHERE parent IS NULL;"
+                        curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
+                        results.append((table_name, "R1", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
+                        print(table_name, "R1")
             for line in results:
                 print(line)
 
@@ -117,12 +127,22 @@ def time_postgres_queries():
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
                         results.append((table_name, "I2", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                         print(table_name, "I2")
+
+                        query = "WITH RECURSIVE cte_parent AS (SELECT id, parent, 0 AS depth FROM " + table_name + " WHERE payload = " + str(random.randint(0, 65536)) + " UNION ALL SELECT t.id, t.parent, depth + 1 FROM " + table_name + " t INNER JOIN cte_parent cte ON cte.parent = t.id) SELECT AVG(depth) FROM cte_parent WHERE parent IS NULL;"
+                        curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
+                        results.append((table_name, "R1", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
+                        print(table_name, "R1")
                     else:
                         for c in range(1,C_MAX_LENGTH+1):
                             query = "SELECT COUNT(*) FROM " + table_name + " WHERE payload LIKE '%" + ''.join(random.choices(string.ascii_letters + string.digits, k=c)) + "%'"
                             curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
-                            results.append((table_name, "C1", c, compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
-                            print(table_name, "C1", c)
+                            results.append((table_name, "C"+str(c), compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
+                            print(table_name, "C"+str(c))
+
+                        query = "WITH RECURSIVE cte_parent AS (SELECT id, parent, 0 AS depth FROM " + table_name + " WHERE payload LIKE '%" + ''.join(random.choices(string.ascii_letters + string.digits, k=4)) + "%' UNION ALL SELECT t.id, t.parent, depth + 1 FROM " + table_name + " t INNER JOIN cte_parent cte ON cte.parent = t.id) SELECT AVG(depth) FROM cte_parent WHERE parent IS NULL;"
+                        curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
+                        results.append((table_name, "R1", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
+                        print(table_name, "R1")
             for line in results:
                 print(line) 
         except (Exception, psycopg2.Error) as e:
