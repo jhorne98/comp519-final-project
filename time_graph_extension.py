@@ -76,8 +76,8 @@ def time_mariadb_oqgraph_queries():
                         for c in range(1,C_MAX_LENGTH+1):
                             query = "SELECT COUNT(*) FROM " + table_name + "_backing WHERE payload LIKE '%" + ''.join(random.choices(string.ascii_letters + string.digits, k=c)) + "%'"
                             curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
-                            results.append((table_name, "C1", c, compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
-                            print(table_name, "C1:", c)
+                            results.append((table_name, "C"+str(c), c, compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
+                            print(table_name, "C"+str(c))
 
                         query_ids = "SELECT destid FROM " + table_name + "_backing WHERE payload LIKE '%" + ''.join(random.choices(string.ascii_letters + string.digits, k=4)) + "%'"
                         curs.execute(query_ids)
@@ -175,8 +175,8 @@ def time_apache_age_queries():
                         for c in range(1,C_MAX_LENGTH+1):
                             query = "SELECT * FROM cypher('" + table_name + "', $$MATCH (n:Node) WITH n, COUNT(*) AS _ WHERE n.payload CONTAINS '" + ''.join(random.choices(string.ascii_letters + string.digits, k=c)) + "' RETURN n$$) AS (n agtype);"
                             curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
-                            results.append((table_name, "C1", c, compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
-                            print(table_name, "C1:", c)
+                            results.append((table_name, "C"+str(c), compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
+                            print(table_name, "C"+str(c))
 
                         query = "SELECT AVG(CAST(d as int)) FROM cypher('" + table_name + "', $$MATCH (n:Node)<-[x:PARENT_OF*0..]-(o:Node) WHERE n.payload = '" + ''.join(random.choices(string.ascii_letters + string.digits, k=4)) + "' RETURN n, COUNT(o) AS depth$$) AS (n agtype, d agtype);"
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
