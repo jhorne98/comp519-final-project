@@ -59,12 +59,36 @@ def time_mariadb_oqgraph_queries():
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
                         results.append((table_name, "I3", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                         print(table_name, "I3")
+
+                        ids = []
+                        while not ids:
+                            query_ids = "SELECT destid FROM " + table_name + "_backing WHERE payload = " + str(random.randint(0, 65536))
+                            curs.execute(query_ids)
+                            for row in curs:
+                                ids.append(str(row[0]))
+                        ids = ','.join(ids)
+                        query = "SELECT AVG(seq) FROM " + table_name + "_graph WHERE latch='breadth_first' AND origid=0 AND destid IN (" + ids + ") AND destid = linkid"
+                        curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
+                        results.append((table_name, "R1", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
+                        print(table_name, "R1")
+
                     else:
                         for c in range(1,C_MAX_LENGTH+1):
                             query = "SELECT COUNT(*) FROM " + table_name + "_backing WHERE payload LIKE '%" + ''.join(random.choices(string.ascii_letters + string.digits, k=c)) + "%'"
                             curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
                             results.append((table_name, "C1", c, compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                             print(table_name, "C1:", c)
+
+                        query_ids = "SELECT destid FROM " + table_name + "_backing WHERE payload LIKE '%" + ''.join(random.choices(string.ascii_letters + string.digits, k=4)) + "%'"
+                        curs.execute(query_ids)
+                        ids = []
+                        for row in curs:
+                            ids.append(str(row[0]))
+                        ids = ','.join(ids)
+                        query = "SELECT AVG(seq) FROM " + table_name + "_graph WHERE latch='breadth_first' AND origid=0 AND destid IN (" + ids + ") AND destid = linkid"
+                        curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
+                        results.append((table_name, "R1", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
+                        print(table_name, "R1")
             for line in results:
                 print(line)
 
@@ -127,7 +151,7 @@ def time_apache_age_queries():
                         results.append((table_name, "S" + str(recur), compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                         print(table_name, "S"+str(recur))
 
-                    if type is DBType.INTEGER:
+                    if type is DBTypePostgres.INTEGER:
                         query = "SELECT * FROM cypher('" + table_name + "', $$MATCH (n:Node) WITH n, COUNT(*) AS _ WHERE n.payload = " + str(random.randint(0, 65536)) + " RETURN n$$) AS (n agtype);"
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
                         results.append((table_name, "I1", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
@@ -138,16 +162,26 @@ def time_apache_age_queries():
                         results.append((table_name, "I2", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                         print(table_name, "I2")
 
-                        query = "SELECT * FROM cypher('" + table_name + "', $$MATCH (n:Node) WITH n, COUNT(*) AS _ WHERE n.payload % " + str(random.randint(0, 65536)) + " = 0 RETURN n$$) AS (n agtype);"
+                        query = "SELECT * FROM cypher('" + table_name + "', $$MATCH (n:Node) WITH n, COUNT(*) AS _ WHERE toInteger(n.payload) % " + str(random.randint(0, 65536)) + " = 0 RETURN n$$) AS (n agtype);"
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
                         results.append((table_name, "I3", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                         print(table_name, "I3")
+
+                        query = "SELECT AVG(CAST(d as int)) FROM cypher('" + table_name + "', $$MATCH (n:Node)<-[x:PARENT_OF*0..]-(o:Node) WHERE n.payload = '" + str(random.randint(0, 65536)) + "' RETURN n, COUNT(o) AS depth$$) AS (n agtype, d agtype);"
+                        curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
+                        results.append((table_name, "R1", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
+                        print(table_name, "R1")
                     else:
                         for c in range(1,C_MAX_LENGTH+1):
                             query = "SELECT * FROM cypher('" + table_name + "', $$MATCH (n:Node) WITH n, COUNT(*) AS _ WHERE n.payload CONTAINS '" + ''.join(random.choices(string.ascii_letters + string.digits, k=c)) + "' RETURN n$$) AS (n agtype);"
                             curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
                             results.append((table_name, "C1", c, compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                             print(table_name, "C1:", c)
+
+                        query = "SELECT AVG(CAST(d as int)) FROM cypher('" + table_name + "', $$MATCH (n:Node)<-[x:PARENT_OF*0..]-(o:Node) WHERE n.payload = '" + ''.join(random.choices(string.ascii_letters + string.digits, k=4)) + "' RETURN n, COUNT(o) AS depth$$) AS (n agtype, d agtype);"
+                        curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
+                        results.append((table_name, "R1", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
+                        print(table_name, "R1")
             for line in results:
                 print(line)
         except (Exception, psycopg2.Error) as e:

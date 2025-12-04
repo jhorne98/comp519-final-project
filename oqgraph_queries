@@ -25,5 +25,15 @@ SELECT COUNT(*) FROM onek_integer_backing WHERE payload = 65535;
 I2
 SELECT COUNT(*) FROM onek_integer_backing WHERE payload < 32767;
 
+R1
+DELIMITER \\
+CREATE PROCEDURE find_depth (IN destination table(destid INT), OUT depths table(depth INT))
+BEGIN
+    SELECT MAX(seq)-1 INTO depth FROM onek_integer_graph WHERE latch='dijkstra' AND origid=0 AND destid=destination;
+END
+DELIMITER ;
+
+(SELECT destid FROM onek_integer_backing WHERE payload = 58941);
+
 C1
 SELECT COUNT(*) FROM onek_char8k_backing WHERE payload LIKE '%asdf%';

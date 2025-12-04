@@ -190,6 +190,7 @@ def apache_age_operations():
 
                         #print(idx)
 
+                    print(len(node_tuples))
                     curs.executemany(node_insertion_query, node_tuples)
                     print(table_name + " nodes inserted")
                     conn.commit()
