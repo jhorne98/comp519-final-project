@@ -2,12 +2,13 @@ import timeit
 import sys
 import random
 import string
+from datetime import datetime
 
 import mariadb
 import psycopg2
 
 from tables import QUERY_RUNS, C_MAX_LENGTH, MAX_RECUR, DBLength, DBType, DBTypePostgres
-from helpers import compute_avg_query_time_ms
+from helpers import compute_avg_query_time_ms, write_data_to_csv
 import configs
 
 def time_mariadb_queries():
@@ -71,6 +72,7 @@ def time_mariadb_queries():
                         print(table_name, "R1")
             for line in results:
                 print(line)
+            write_data_to_csv(results, "test/mariadb_random" + datetime.today().strftime('%Y_%m_%d') + ".csv")
 
         except mariadb.Error as e:
             print(f"Error creating table: {e}")
@@ -145,6 +147,8 @@ def time_postgres_queries():
                         print(table_name, "R1")
             for line in results:
                 print(line) 
+            write_data_to_csv(results, "test/postgres_random" + datetime.today().strftime('%Y_%m_%d') + ".csv")
+
         except (Exception, psycopg2.Error) as e:
             print(f"Error creating table: {e}")
             conn.rollback()

@@ -33,7 +33,7 @@ BEGIN
 END
 DELIMITER ;
 
-(SELECT destid FROM onek_integer_backing WHERE payload = 58941);
+SELECT destid FROM onek_integer_backing WHERE payload = 58941;
 
 C1
 SELECT COUNT(*) FROM onek_char8k_backing WHERE payload LIKE '%asdf%';

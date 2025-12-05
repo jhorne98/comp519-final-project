@@ -2,12 +2,13 @@ import timeit
 import sys
 import random
 import string
+from datetime import datetime
 
 import mariadb
 import psycopg2
 
 from tables import QUERY_RUNS, C_MAX_LENGTH, MAX_RECUR, DBLength, DBType, DBTypePostgres
-from helpers import compute_avg_query_time_ms
+from helpers import compute_avg_query_time_ms, write_data_to_csv
 import configs
 
 def time_mariadb_oqgraph_queries():
@@ -60,6 +61,7 @@ def time_mariadb_oqgraph_queries():
                         results.append((table_name, "I3", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                         print(table_name, "I3")
 
+                        '''
                         ids = []
                         while not ids:
                             query_ids = "SELECT destid FROM " + table_name + "_backing WHERE payload = " + str(random.randint(0, 65536))
@@ -67,7 +69,8 @@ def time_mariadb_oqgraph_queries():
                             for row in curs:
                                 ids.append(str(row[0]))
                         ids = ','.join(ids)
-                        query = "SELECT AVG(seq) FROM " + table_name + "_graph WHERE latch='breadth_first' AND origid=0 AND destid IN (" + ids + ") AND destid = linkid"
+                        '''
+                        query = "SELECT AVG(seq) FROM " + table_name + "_graph WHERE latch='breadth_first' AND origid=0 AND destid IN (" + str(random.randint(0, length.value)) + ") AND destid = linkid"
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
                         results.append((table_name, "R1", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                         print(table_name, "R1")
@@ -79,18 +82,21 @@ def time_mariadb_oqgraph_queries():
                             results.append((table_name, "C"+str(c), c, compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                             print(table_name, "C"+str(c))
 
+                        '''
                         query_ids = "SELECT destid FROM " + table_name + "_backing WHERE payload LIKE '%" + ''.join(random.choices(string.ascii_letters + string.digits, k=4)) + "%'"
                         curs.execute(query_ids)
                         ids = []
                         for row in curs:
                             ids.append(str(row[0]))
                         ids = ','.join(ids)
-                        query = "SELECT AVG(seq) FROM " + table_name + "_graph WHERE latch='breadth_first' AND origid=0 AND destid IN (" + ids + ") AND destid = linkid"
+                        '''
+                        query = "SELECT AVG(seq) FROM " + table_name + "_graph WHERE latch='breadth_first' AND origid=0 AND destid IN (" + str(random.randint(0, length.value)) + ") AND destid = linkid"
                         curs_time = timeit.timeit(lambda: curs.execute(query), number=QUERY_RUNS)
                         results.append((table_name, "R1", compute_avg_query_time_ms(curs_time, QUERY_RUNS)))
                         print(table_name, "R1")
             for line in results:
                 print(line)
+            write_data_to_csv(results, "test/oqgraph_random_" + datetime.today().strftime('%Y_%m_%d') + ".csv")
 
         except mariadb.Error as e:
             print(f"Error creating table: {e}")
@@ -184,6 +190,8 @@ def time_apache_age_queries():
                         print(table_name, "R1")
             for line in results:
                 print(line)
+            write_data_to_csv(results, "test/apache_age_random" + datetime.today().strftime('%Y_%m_%d') + ".csv")
+
         except (Exception, psycopg2.Error) as e:
             print(f"Error executing graph: {e}")
             conn.rollback()
